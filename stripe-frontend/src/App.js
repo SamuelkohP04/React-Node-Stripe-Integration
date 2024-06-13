@@ -12,6 +12,32 @@ function App() {
   });
 
 
+  const makePayment = (token) => {
+    const body  = {
+      token, 
+      product
+    }
+    const headers = {
+      "Content-Type": "application/json"
+    }
+
+    return fetch(`http://localhost:8282/payment`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body)
+    }).then(response => {
+      console.log("Response", response);
+      const { status } = response;
+      console.log("Status", status);
+
+    })
+    .catch(err => console.log("Error", err));
+
+}
+
+
+
+
   return (
     <div className="App">
       <header className="App-header">
@@ -27,9 +53,10 @@ function App() {
           Learn React
         </a>
         <StripeCheckout 
-        stripeKey=''
-        token=''
-        name="Buy React"> 
+        stripeKey= { process.env.STRIPE_SECRET_KEY }
+        token={ makePayment }
+        name="Buy React"
+        amount={product.price * 100}> 
         <button className="btn-large pink">Buy React is only ${product.price}</button>
         </StripeCheckout>
       </header>
