@@ -1,6 +1,6 @@
 # React-Node-Stripe-Integration
 
-This project demonstrates how to integrate Stripe payment processing with a React frontend and a Node.js backend. The integration is based on the tutorial by Hitesh Choudhary.
+This project demonstrates how to integrate Stripe payment processing with a React frontend and a Node.js backend. 
 
 ## Features
 
