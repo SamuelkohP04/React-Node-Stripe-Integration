@@ -1,56 +1,45 @@
-const cors = require('cors');
+require('dotenv').config();
 const express = require('express');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const cors = require('cors');
+const Stripe = require('stripe');
 const { v4: uuidv4 } = require('uuid');
+
+const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const app = express();
 
-
-// middleware
+// Middleware
 app.use(express.json());
 app.use(cors());
-
 
 app.get('/', (req, res) => {
   res.send('Hello World!');
 });
 
+app.post('/payment', async (req, res) => {
+  const { paymentMethodId, email } = req.body;
+  console.log("Payment Method ID", paymentMethodId);
+  console.log("Email", email);
 
-app.post('/payment', (req, res) => {
-  const { product, token } = req.body;
-  console.log("Product", product);
-  console.log("Price", product.price);
-  //ensure user is not charged twice
-  const idempotencyKey = uuidv4(); 
-  return stripe.customers.create({
-    email: token.email,
-    source: token.id,
-    // description: product.name,
-    // metadata: {
-    //   idempotencyKey
-    // }
-  }).then((customer) => {
-    console.log("Customer created", customer);
-    stripe.charges.create({
-      amount: product.price * 100,
+  const idempotencyKey = uuidv4();
+
+  try {
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: 1000, // Example amount in cents
       currency: 'usd',
-      customer: customer.id,
-      receipient_email: token.email,
-      description: product.name,
-      shipping: {
-        name: token.card.name,
-        address: {
-          country: token.card.address_country,
-      }
-    }
-  }, {idempotencyKey })
-  
-    .then(result => res.status(200).json(result))
-    .catch((err => res.status(500).json(err)));
-  })
+      payment_method: paymentMethodId,
+      confirmation_method: 'manual',
+      confirm: true,
+      receipt_email: email,
+    }, { idempotencyKey });
+
+    res.status(200).send({ success: true, paymentIntent });
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).send({ success: false, error: error.message });
+  }
 });
 
-
-//listen 
+// Listen
 app.listen(process.env.PORT || 8282, () => {
   console.log('Server is running on port', process.env.PORT || 8282);
 });
